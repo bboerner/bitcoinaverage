@@ -46,4 +46,5 @@ log_config = {
         'level': 'DEBUG',
     },
 }
-logging.config.dictConfig(log_config)
+
+# logging.config.dictConfig(log_config)

@@ -173,15 +173,30 @@ def callAPI(exchange_name):
 
 
 def _bitstampApiCall(api_ticker_url, *args, **kwargs):
+
+    # {
+    #   "high": "493.98",
+    #   "last": "471.63",
+    #   "timestamp": "1408519084",
+    #   "bid": "469.42",
+    #   "vwap": "482.47",
+    #   "volume": "16135.75115783",
+    #   "low": "466.00",
+    #   "ask": "471.62"
+    # }
+
     with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
         response = urllib2.urlopen(urllib2.Request(url=api_ticker_url, headers=API_REQUEST_HEADERS)).read()
         ticker = json.loads(response)
 
     result = {}
-    result['USD'] = {'ask': Decimal(ticker['ask']).quantize(DEC_PLACES),
-                    'bid': Decimal(ticker['bid']).quantize(DEC_PLACES),
-                    'last': Decimal(ticker['last']).quantize(DEC_PLACES),
-                    'volume': Decimal(ticker['volume']).quantize(DEC_PLACES),
+    result['USD'] = {
+        'ask': Decimal(ticker['ask']).quantize(DEC_PLACES),
+        'bid': Decimal(ticker['bid']).quantize(DEC_PLACES),
+        'last': Decimal(ticker['last']).quantize(DEC_PLACES),
+        'volume': Decimal(ticker['volume']).quantize(DEC_PLACES),
+        'timestamp': ticker['timestamp'],
+        'rtm': time.time(),
     }
 
     return result
@@ -217,15 +232,34 @@ def _campbxApiCall(api_ticker_url, api_trades_url, *args, **kwargs):
 
 
 def _btceApiCall(usd_api_url, eur_api_url, rur_api_url, *args, **kwargs):
+
+    # {
+    # "ticker": {
+    #     "high": 487.28699,
+    #     "low": 452.96799,
+    #     "avg": 470.12749,
+    #     "vol": 3751302.36865,
+    #     "vol_cur": 7978.55969,
+    #     "last": 460.743,
+    #     "buy": 460.332,
+    #     "sell": 459.922,
+    #     "updated": 1408518885,
+    #     "server_time": 1408518887
+    #     }
+    # }
+
+
     with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
         response = urllib2.urlopen(urllib2.Request(url=usd_api_url, headers=API_REQUEST_HEADERS)).read()
         usd_result = json.loads(response)
-    with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
-        response = urllib2.urlopen(urllib2.Request(url=eur_api_url, headers=API_REQUEST_HEADERS)).read()
-        eur_result = json.loads(response)
-    with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
-        response = urllib2.urlopen(urllib2.Request(url=rur_api_url, headers=API_REQUEST_HEADERS)).read()
-        rur_result = json.loads(response)
+
+    if False:
+        with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+            response = urllib2.urlopen(urllib2.Request(url=eur_api_url, headers=API_REQUEST_HEADERS)).read()
+            eur_result = json.loads(response)
+        with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+            response = urllib2.urlopen(urllib2.Request(url=rur_api_url, headers=API_REQUEST_HEADERS)).read()
+            rur_result = json.loads(response)
 
     #dirty hack, BTC-e has a bug in their APIs - buy/sell prices mixed up
     if usd_result['ticker']['sell'] < usd_result['ticker']['buy']:
@@ -233,31 +267,45 @@ def _btceApiCall(usd_api_url, eur_api_url, rur_api_url, *args, **kwargs):
         usd_result['ticker']['buy'] = usd_result['ticker']['sell']
         usd_result['ticker']['sell'] = temp
 
-    if eur_result['ticker']['sell'] < eur_result['ticker']['buy']:
-        temp = eur_result['ticker']['buy']
-        eur_result['ticker']['buy'] = eur_result['ticker']['sell']
-        eur_result['ticker']['sell'] = temp
+    if False:
+        if eur_result['ticker']['sell'] < eur_result['ticker']['buy']:
+            temp = eur_result['ticker']['buy']
+            eur_result['ticker']['buy'] = eur_result['ticker']['sell']
+            eur_result['ticker']['sell'] = temp
 
-    if rur_result['ticker']['sell'] < rur_result['ticker']['buy']:
-        temp = rur_result['ticker']['buy']
-        rur_result['ticker']['buy'] = rur_result['ticker']['sell']
-        rur_result['ticker']['sell'] = temp
+        if rur_result['ticker']['sell'] < rur_result['ticker']['buy']:
+            temp = rur_result['ticker']['buy']
+            rur_result['ticker']['buy'] = rur_result['ticker']['sell']
+            rur_result['ticker']['sell'] = temp
 
-    return {'USD': {'ask': Decimal(usd_result['ticker']['sell']).quantize(DEC_PLACES),
-                    'bid': Decimal(usd_result['ticker']['buy']).quantize(DEC_PLACES),
-                    'last': Decimal(usd_result['ticker']['last']).quantize(DEC_PLACES),
-                    'volume': Decimal(usd_result['ticker']['vol_cur']).quantize(DEC_PLACES),
-                    },
-            'EUR': {'ask': Decimal(eur_result['ticker']['sell']).quantize(DEC_PLACES),
-                    'bid': Decimal(eur_result['ticker']['buy']).quantize(DEC_PLACES),
-                    'last': Decimal(eur_result['ticker']['last']).quantize(DEC_PLACES),
-                    'volume': Decimal(eur_result['ticker']['vol_cur']).quantize(DEC_PLACES),
-            },
-            'RUB': {'ask': Decimal(rur_result['ticker']['sell']).quantize(DEC_PLACES),
-                    'bid': Decimal(rur_result['ticker']['buy']).quantize(DEC_PLACES),
-                    'last': Decimal(rur_result['ticker']['last']).quantize(DEC_PLACES),
-                    'volume': Decimal(rur_result['ticker']['vol_cur']).quantize(DEC_PLACES),
-            }}
+    return {
+        'USD': {
+            'ask': Decimal(usd_result['ticker']['sell']).quantize(DEC_PLACES),
+            'bid': Decimal(usd_result['ticker']['buy']).quantize(DEC_PLACES),
+            'last': Decimal(usd_result['ticker']['last']).quantize(DEC_PLACES),
+            'volume': Decimal(usd_result['ticker']['vol_cur']).quantize(DEC_PLACES),
+            'timestamp': usd_result['ticker']['updated'],
+            'server_tm': usd_result['ticker']['server_time'],
+            'rtm': time.time(),
+        },
+    }
+
+    if False:
+        return {'USD': {'ask': Decimal(usd_result['ticker']['sell']).quantize(DEC_PLACES),
+                        'bid': Decimal(usd_result['ticker']['buy']).quantize(DEC_PLACES),
+                        'last': Decimal(usd_result['ticker']['last']).quantize(DEC_PLACES),
+                        'volume': Decimal(usd_result['ticker']['vol_cur']).quantize(DEC_PLACES),
+                        },
+                'EUR': {'ask': Decimal(eur_result['ticker']['sell']).quantize(DEC_PLACES),
+                        'bid': Decimal(eur_result['ticker']['buy']).quantize(DEC_PLACES),
+                        'last': Decimal(eur_result['ticker']['last']).quantize(DEC_PLACES),
+                        'volume': Decimal(eur_result['ticker']['vol_cur']).quantize(DEC_PLACES),
+                },
+                'RUB': {'ask': Decimal(rur_result['ticker']['sell']).quantize(DEC_PLACES),
+                        'bid': Decimal(rur_result['ticker']['buy']).quantize(DEC_PLACES),
+                        'last': Decimal(rur_result['ticker']['last']).quantize(DEC_PLACES),
+                        'volume': Decimal(rur_result['ticker']['vol_cur']).quantize(DEC_PLACES),
+                }}
 
 
 def _bitcurexApiCall(eur_ticker_url, eur_trades_url, pln_ticker_url, pln_trades_url, *args, **kwargs):
@@ -794,19 +842,38 @@ def _cavirtexApiCall(ticker_url, orderbook_url, *args, **kwargs):
 
 
 def _bitfinexApiCall(ticker_url, today_url, *args, **kwargs):
+    # {
+    #   "mid": "467.2",
+    #   "bid": "467.0",
+    #   "ask": "467.4",
+    #   "last_price": "466.39",
+    #   "timestamp": "1408519149.597515668"
+    # }
+
     with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
         response = urllib2.urlopen(urllib2.Request(url=ticker_url, headers=API_REQUEST_HEADERS)).read()
         ticker = json.loads(response)
-    with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
-        response = urllib2.urlopen(urllib2.Request(url=today_url, headers=API_REQUEST_HEADERS)).read()
-        today = json.loads(response)
+
+    if False:
+        with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+            response = urllib2.urlopen(urllib2.Request(url=today_url, headers=API_REQUEST_HEADERS)).read()
+            today = json.loads(response)
 
     result = {}
-    result['USD'] = {'ask': Decimal(ticker['ask']).quantize(DEC_PLACES),
-                     'bid': Decimal(ticker['bid']).quantize(DEC_PLACES),
-                     'last': Decimal(ticker['last_price']).quantize(DEC_PLACES),
-                     'volume': Decimal(today['volume']).quantize(DEC_PLACES),
-                     }
+    result['USD'] = {
+        'ask': Decimal(ticker['ask']).quantize(DEC_PLACES),
+        'bid': Decimal(ticker['bid']).quantize(DEC_PLACES),
+        'last': Decimal(ticker['last_price']).quantize(DEC_PLACES),
+        'timestamp': ticker['timestamp'],
+        'rtm': time.time(),
+    }
+
+    if False:
+        result['USD'] = {'ask': Decimal(ticker['ask']).quantize(DEC_PLACES),
+                         'bid': Decimal(ticker['bid']).quantize(DEC_PLACES),
+                         'last': Decimal(ticker['last_price']).quantize(DEC_PLACES),
+                         'volume': Decimal(today['volume']).quantize(DEC_PLACES),
+                         }
 
     return result
 
