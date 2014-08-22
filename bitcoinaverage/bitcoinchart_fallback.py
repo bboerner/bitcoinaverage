@@ -42,11 +42,14 @@ def getData(bitcoincharts_symbols):
         for currency_code in bitcoincharts_symbols:
             if api['symbol'] == bitcoincharts_symbols[currency_code]:
                 try:
-                    return_result[currency_code] = {'ask': Decimal(api['ask']).quantize(DEC_PLACES),
-                                                    'bid': Decimal(float(api['bid'])).quantize(DEC_PLACES),
-                                                    'last': Decimal(float(api['close'])).quantize(DEC_PLACES),
-                                                    'volume': Decimal(float(api['volume'])).quantize(DEC_PLACES),
-                                                       }
+                    return_result[currency_code] = {
+                        'ask': Decimal(api['ask']).quantize(DEC_PLACES),
+                        'bid': Decimal(float(api['bid'])).quantize(DEC_PLACES),
+                        'last': Decimal(float(api['close'])).quantize(DEC_PLACES),
+                        'volume': Decimal(float(api['volume'])).quantize(DEC_PLACES),
+                        'timestamp': api['latest_trade'],
+                        'rtm': time.time(),
+                    }
                 except TypeError:
                     pass
 
