@@ -16,3 +16,16 @@
 /venv/*
 fabfile.py
 supervisord.conf
+
+#
+# bboerner specific
+#
+
+ipython.sh
+vars.sh
+
+comments
+delme.sh
+mypatches.patch
+logs/
+sandbox/
