@@ -190,10 +190,10 @@ def _796ApiCall(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_u
                 ticker = {
                     'high': Decimal(ticker['high']).quantize(DEC_PLACES),
                     'low': Decimal(ticker['low']).quantize(DEC_PLACES),
-                    'buy': Decimal(ticker['buy']).quantize(DEC_PLACES),
-                    'sell': Decimal(ticker['sell']).quantize(DEC_PLACES),
+                    'bid': Decimal(ticker['buy']).quantize(DEC_PLACES),
+                    'ask': Decimal(ticker['sell']).quantize(DEC_PLACES),
                     'last': Decimal(ticker['last']).quantize(DEC_PLACES),
-                    'vol': Decimal(ticker['vol']).quantize(DEC_PLACES),
+                    'volume': Decimal(ticker['vol']).quantize(DEC_PLACES),
                     }
 
         # Depth:
@@ -228,21 +228,21 @@ def _796ApiCall(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_u
         return (ticker, depth, trades)
 
     result = {}
-    result['rtm'] = time.time()
+    rtm = time.time()
 
     (ticker, depth, trades) = _api_call(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_url)
     if ticker or depth or trades:
-        result['BTCUSD'] = {}
+        result['BTCUSD'] = {'rtm': rtm}
         if ticker: result['BTCUSD']['ticker'] = ticker
         if depth: result['BTCUSD']['depth'] = depth
         if trades: result['BTCUSD']['trades'] = trades
 
     (ticker, depth, trades) = _api_call(ltcusd_fut_ticker_url, ltcusd_fut_depth_url, ltcusd_fut_trades_url)
     if ticker or depth or trades:
-        result['LTCUSD'] = {}
-        if ticker: result['BTCUSD']['ticker'] = ticker
-        if depth: result['BTCUSD']['depth'] = depth
-        if trades: result['BTCUSD']['trades'] = trades
+        result['LTCUSD'] = {'rtm': rtm}
+        if ticker: result['LTCUSD']['ticker'] = ticker
+        if depth: result['LTCUSD']['depth'] = depth
+        if trades: result['LTCUSD']['trades'] = trades
 
     return result
 
