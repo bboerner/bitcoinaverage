@@ -42,10 +42,8 @@ API_CALL_TIMEOUT_THRESHOLD = 15  # seconds before exchange API call timeout. exc
 API_QUERY_FREQUENCY = {
     '_all': 10,  # parser daemon cycle duration
     '_default': 60,
-    'bitcoincharts': 60,
-    'btce': 10,
-    'bitfinex': 10,
-    'bitstamp': 10,
+    'bitcoincharts': 900,
+    'bitstamp': 30,
 }
 
 if hasattr(bitcoinaverage.server, 'DEFAULT_API_QUERY_FREQUENCY_OVERRIDE'):
@@ -117,6 +115,17 @@ BITCOIN_CHARTS_API_URL = 'https://api.bitcoincharts.com/v1/markets.json'
 
 EXCHANGE_LIST = {
     #EXCHANGES WITH DIRECT INTEGRATION
+    '796': {
+        'btcusd_fut_ticker_url': 'http://api.796.com/v3/futures/ticker.html?type=weekly',
+        'btcusd_fut_depth_url': 'http://api.796.com/v3/futures/depth.html?type=weekly',
+        'btcusd_fut_trades_url': 'http://api.796.com/v3/futures/trades.html?type=weekly',
+        'ltcusd_fut_ticker_url': 'http://api.796.com/v3/futures/ticker.html?type=ltc',
+        'ltcusd_fut_depth_url': 'http://api.796.com/v3/futures/depth.html?type=ltc',
+        'ltcusd_fut_trades_url': 'http://api.796.com/v3/futures/trades.html?type=ltc',
+        'display_name': '796.com',
+        'URL': 'http://api.796.com/',
+        },
+
     'bitstamp': {'api_ticker_url': 'https://www.bitstamp.net/api/ticker/',
                  'display_name': 'Bitstamp',
                  'URL': 'https://bitstamp.net/',
