@@ -40,10 +40,13 @@ API_CALL_TIMEOUT_THRESHOLD = 15  # seconds before exchange API call timeout. exc
 
 #seconds between calls to various exchanges APIs
 API_QUERY_FREQUENCY = {
-    '_all': 10,  # parser daemon cycle duration
+    '_all': 5,  # parser daemon cycle duration
     '_default': 60,
-    'bitcoincharts': 900,
-    'bitstamp': 30,
+    'bitcoincharts': 60,
+    'bitfinex': 10,
+    'bitstamp': 10,
+    'btce': 10,
+    '796': 5,
 }
 
 if hasattr(bitcoinaverage.server, 'DEFAULT_API_QUERY_FREQUENCY_OVERRIDE'):
