@@ -322,6 +322,82 @@ def _796ApiCall(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_u
     return result
 
 
+def _796ApiCall(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_url,
+    ltcusd_fut_ticker_url, ltcusd_fut_depth_url, ltcusd_fut_trades_url,
+    *args, **kwargs):
+
+    # https://796.com/other/apiV3.html
+    def _api_call(api_ticker_url, api_depth_url, api_trades_url):
+
+        # Ticker:
+        # last price (last), highest price (high), lowest price (low), trading volume (vol), buy(1) and price; refreshing every 1 second
+        # Success: {"ticker":{"high":"790.00","low":"612.02","buy":"758.08","sell":"764.00","last":"758.00","vol":"12742.81"}}
+        ticker = None
+        if api_ticker_url:
+            with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+                response = urllib2.urlopen(urllib2.Request(url=api_ticker_url, headers=API_REQUEST_HEADERS)).read()
+                ticker = json.loads(response)
+                ticker = ticker['ticker']
+                ticker = {
+                    'high': Decimal(ticker['high']).quantize(DEC_PLACES),
+                    'low': Decimal(ticker['low']).quantize(DEC_PLACES),
+                    'bid': Decimal(ticker['buy']).quantize(DEC_PLACES),
+                    'ask': Decimal(ticker['sell']).quantize(DEC_PLACES),
+                    'last': Decimal(ticker['last']).quantize(DEC_PLACES),
+                    'volume': Decimal(ticker['vol']).quantize(DEC_PLACES),
+                    }
+
+        # Depth:
+        # Orders, quantity: 100; refreshing every 1 second.
+        # {"asks":[["887.00","30"],["875.00","0.4"],...],"bids":[["758.09","0.1"],["758.08","6.16"],...]}
+        depth = []
+        if api_depth_url:
+            with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+                response = urllib2.urlopen(urllib2.Request(url=api_depth_url, headers=API_REQUEST_HEADERS)).read()
+                depth = json.loads(response)
+                depth = {
+                    'bids': [[Decimal(p).quantize(DEC_PLACES), Decimal(v).quantize(DEC_PLACES)] for (p, v) in depth['bids']],
+                    'asks': [[Decimal(p).quantize(DEC_PLACES), Decimal(v).quantize(DEC_PLACES)] for (p, v) in depth['asks']],
+                    }
+
+        # Trades:
+        # quantity: 100; refreshing every 1 second.
+        # Success: [{"date":1387529350,"price":"761.50","amount":"1.14","tid":"84964","type":"sell"},...]
+        trades = []
+        if api_trades_url:
+            with Timeout(API_CALL_TIMEOUT_THRESHOLD, CallTimeoutException):
+                response = urllib2.urlopen(urllib2.Request(url=api_trades_url, headers=API_REQUEST_HEADERS)).read()
+                trades = json.loads(response)
+                trades = [{
+                    'date': e['date'],
+                    'tid': e['tid'],
+                    'type': e['type'],
+                    'price': Decimal(e['price']).quantize(DEC_PLACES),
+                    'amount': Decimal(e['amount']).quantize(DEC_PLACES)
+                } for e in trades]
+
+        return (ticker, depth, trades)
+
+    result = {}
+    rtm = time.time()
+
+    (ticker, depth, trades) = _api_call(btcusd_fut_ticker_url, btcusd_fut_depth_url, btcusd_fut_trades_url)
+    if ticker or depth or trades:
+        result['BTCUSD'] = {'rtm': rtm}
+        if ticker: result['BTCUSD']['ticker'] = ticker
+        if depth: result['BTCUSD']['depth'] = depth
+        if trades: result['BTCUSD']['trades'] = trades
+
+    (ticker, depth, trades) = _api_call(ltcusd_fut_ticker_url, ltcusd_fut_depth_url, ltcusd_fut_trades_url)
+    if ticker or depth or trades:
+        result['LTCUSD'] = {'rtm': rtm}
+        if ticker: result['LTCUSD']['ticker'] = ticker
+        if depth: result['LTCUSD']['depth'] = depth
+        if trades: result['LTCUSD']['trades'] = trades
+
+    return result
+
+
 def _bitstampApiCall(api_ticker_url, *args, **kwargs):
 
     # {
